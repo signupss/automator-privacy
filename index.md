@@ -27,10 +27,13 @@ Automator utilizes the `AccessibilityService` API to programmatically interact w
 * **Reading screen content** and UI element properties locally to detect specific text or image triggers.
 * **Monitoring window state changes** to automate tasks inside apps as explicitly configured by the user.
 
-> This framework operates solely when a macro is running and does not log keystроkes, monitor active background behavior outside of active macro rules, or capture credentials.
+> This framework operates solely when a macro is running and does not log keystrokes, monitor active background behavior outside of active macro rules, or capture credentials.
 
-### File System & All Files Access (MANAGE_EXTERNAL_STORAGE)
-The app uses file management permissions to store, load, export, and import macro files, script projects, and execution logs. It requires `MANAGE_EXTERNAL_STORAGE` to automate complex local file operations—such as automatic backups, project synchronization, directory pruning, and processing files of arbitrary extensions (`.json`, `.xml`, `.cfg`)—across user-accessible directories without disrupting background automation loops.
+### Secure File Storage & Storage Access Framework (SAF)
+Automator complies with modern Android scoped-privacy standards. The app **does not request or declare broad file system access permissions** (such as `MANAGE_EXTERNAL_STORAGE` or `READ_EXTERNAL_STORAGE`). Instead, data access is strictly sandboxed and user-controlled:
+* **Storage Access Framework (SAF):** The app accesses external files or directories (such as `.json` or `.zip` macro packages) strictly through standard system intents (`ACTION_OPEN_DOCUMENT_TREE`, `ACTION_OPEN_DOCUMENT`). Persistent access is maintained entirely locally using secure, user-authorized URI permissions (`takePersistableUriPermission`).
+* **Android Photo Picker:** Media resources required for visual automation triggers are selected securely via the native system Photo Picker, ensuring the app never reads or scans your wider photo library.
+* **App-Scoped Local Storage:** Project assets, logs, and configuration databases are isolated entirely within the application’s private secure directories (`filesDir` / `getExternalFilesDir`), meaning they are entirely inaccessible to other applications.
 
 ### Location Data & Geofencing (Fine, Coarse, and Background Location)
 Location data is processed strictly in real-time and entirely offline. The app accesses location in the background solely to evaluate user-configured geofencing triggers (e.g., executing a macro when entering or leaving a specified geographic area). We do not track, map, or retain historical location logs.
@@ -44,15 +47,16 @@ Automator contains modules for interacting with cellular features, which execute
 * **Contacts (`READ_CONTACTS`, `WRITE_CONTACTS`):** Accessed only to look up contact names or manage records when executing user-configured communication macros.
 * **Calendar (`READ_CALENDAR`, `WRITE_CALENDAR`):** Used to check scheduled events as macro entry conditions or to automate the creation/modification of appointments.
 
-### Package Visibility (QUERY_ALL_PACKAGES)
-The app queries the list of installed applications on the device to populate macro configuration menus, allowing you to select target apps for launching, stopping background processes, or executing context-specific automated tasks.
+### Package Visibility & Application Management (QUERY_ALL_PACKAGES)
+* **Package Visibility:** The app queries the list of installed applications on the device (`QUERY_ALL_PACKAGES`) solely to populate user configuration menus, allowing you to select specific target apps for launching, automated context switching, or termination.
+* **Package Installation Handling:** Utilizing standard system requests (`REQUEST_INSTALL_PACKAGES`, `REQUEST_DELETE_PACKAGES`), the app can bridge user-triggered automation steps to launch the native package installer or uninstaller dialogs, requiring manual verification by the user at runtime.
 
 ### Notification Listener Service
 The app monitors incoming system notifications purely to act as a trigger mechanism, allowing macros to fire automatically when specific text patterns or apps post a notification.
 
 ### Device Administration & Secure System Settings
 * **Device Admin (`BIND_DEVICE_ADMIN`):** Used exclusively to invoke the system force-lock action when executing a screen-lock macro step.
-* **System Settings (`WRITE_SETTINGS`, `WRITE_SECURE_SETTINGS` via Shizuku integration):** Used to automate system toggles (such as proxy setups, display behavior, or advanced system flags) exactly as defined in your macro steps.
+* **System Settings (`WRITE_SETTINGS`):** Used to automate basic system toggles (such as display behavior, brightness, or connectivity profiles) exactly as defined in your macro steps.
 
 ---
 
